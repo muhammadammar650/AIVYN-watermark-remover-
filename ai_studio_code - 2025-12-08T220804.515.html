@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aivyn Intelligence - AI Downloader</title>
+    <!-- Modern Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- THEME VARIABLES (Light & Clean) --- */
+        :root {
+            --primary: #2563eb;       /* Royal Blue */
+            --primary-dark: #1d4ed8;
+            --secondary: #eff6ff;     /* Very light blue bg */
+            --text-main: #1e293b;     /* Dark Slate */
+            --text-light: #64748b;    /* Grey */
+            --white: #ffffff;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--secondary);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- HEADER --- */
+        header {
+            background: var(--white);
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), #4f46e5);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-transform: uppercase;
+            letter-spacing: -0.5px;
+        }
+
+        /* --- HERO SECTION --- */
+        main {
+            flex: 1;
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+            color: #0f172a;
+        }
+        
+        h1 span { color: var(--primary); }
+
+        p.subtitle {
+            font-size: 0.95rem;
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            max-width: 500px;
+        }
+
+        /* --- INPUT BOX (Mobile Optimized) --- */
+        .search-container {
+            width: 100%;
+            background: var(--white);
+            padding: 0.5rem;
+            border-radius: var(--radius);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column; /* Stack on mobile by default */
+            gap: 0.5rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        @media(min-width: 600px) {
+            .search-container {
+                flex-direction: row;
+                padding: 0.4rem;
+                border-radius: 50px; /* Pill shape on desktop */
+            }
+        }
+
+        input {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            font-size: 1rem;
+            outline: none;
+            background: transparent;
+            font-family: inherit;
+            min-width: 0; /* Prevents overflow */
+        }
+
+        button#btn-process {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px; /* Boxy on mobile */
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.2s;
+            width: 100%; /* Full width on mobile */
+        }
+
+        @media(min-width: 600px) {
+            button#btn-process {
+                width: auto;
+                border-radius: 40px; /* Round on desktop */
+            }
+        }
+
+        button#btn-process:active { transform: scale(0.98); }
+        button#btn-process:disabled { opacity: 0.7; cursor: wait; }
+
+        /* Paste Button */
+        .paste-btn {
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--primary);
+            background: #dbeafe;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+
+        /* --- RESULT CARD --- */
+        #result-area {
+            width: 100%;
+            margin-top: 2rem;
+            display: none;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Responsive Card Layout */
+        .card-body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media(min-width: 600px) {
+            .card-body { flex-direction: row; }
+        }
+
+        .thumb-container {
+            position: relative;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .thumb-container img {
+            width: 100%;
+            height: auto;
+            max-height: 300px;
+            object-fit: contain; /* Keeps aspect ratio */
+        }
+
+        @media(min-width: 600px) {
+            .thumb-container { width: 200px; flex-shrink: 0; }
+            .thumb-container img { height: 100%; object-fit: cover; }
+        }
+
+        .info {
+            padding: 1.5rem;
+            flex: 1;
+            text-align: left;
+        }
+
+        .author {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .author img { width: 32px; height: 32px; border-radius: 50%; background: #eee; }
+        .author strong { font-size: 0.95rem; }
+
+        .desc {
+            font-size: 0.9rem;
+            color: var(--text-main);
+            margin-bottom: 15px;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 15px;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-bottom: 20px;
+            background: #f8fafc;
+            padding: 8px;
+            border-radius: 6px;
+            width: fit-content;
+        }
+
+        /* Buttons */
+        .btn-group { display: grid; gap: 10px; }
+        
+        .btn-dl {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-secondary { background: #f1f5f9; color: var(--text-main); border: 1px solid #cbd5e1; }
+
+        /* --- FOOTER --- */
+        footer {
+            margin-top: auto;
+            padding: 2rem;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            background: #f8fafc;
+        }
+
+        /* --- LOADER --- */
+        .loader {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .error-msg {
+            color: #dc2626;
+            background: #fef2f2;
+            border: 1px solid #fee2e2;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            display: none;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="navbar">
+            <div class="logo">Aivyn Intelligence</div>
+        </div>
+    </header>
+
+    <main>
+        <h1>Video Downloader<br><span>Powered by AI</span></h1>
+        <p class="subtitle">Save high-quality TikTok videos without the watermark. Fast, free, and mobile-friendly.</p>
+
+        <div class="search-container">
+            <input type="text" id="urlInput" placeholder="Paste link here..." autocomplete="off">
+            <button id="btn-process">Analyze</button>
+        </div>
+
+        <button class="paste-btn" id="pasteBtn">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+            Paste Link
+        </button>
+
+        <div id="loader" class="loader"></div>
+        <div id="errorMsg" class="error-msg"></div>
+
+        <div id="result-area">
+            <!-- Result Card Injected Here -->
+        </div>
+    </main>
+
+    <footer>
+        &copy; 2025 Aivyn Intelligence.<br>
+        For educational purposes only.
+    </footer>
+
+    <script>
+        // API Configuration
+        const API_URL = "https://www.tikwm.com/api/";
+
+        const urlInput = document.getElementById('urlInput');
+        const processBtn = document.getElementById('btn-process');
+        const pasteBtn = document.getElementById('pasteBtn');
+        const loader = document.getElementById('loader');
+        const resultArea = document.getElementById('result-area');
+        const errorMsg = document.getElementById('errorMsg');
+
+        // Paste functionality
+        pasteBtn.addEventListener('click', async () => {
+            try {
+                const text = await navigator.clipboard.readText();
+                urlInput.value = text;
+                // Optional: Auto-submit on paste for faster UX
+                // handleProcess(); 
+            } catch (err) {
+                alert("Please paste the link manually.");
+            }
+        });
+
+        // Trigger on click or Enter
+        processBtn.addEventListener('click', handleProcess);
+        urlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleProcess();
+        });
+
+        async function handleProcess() {
+            const url = urlInput.value.trim();
+
+            // Validation
+            if (!url) return showError("Please paste a URL first.");
+            if (!url.includes("tiktok.com")) return showError("Invalid URL. Please use a TikTok link.");
+
+            // UI State: Loading
+            resultArea.style.display = 'none';
+            errorMsg.style.display = 'none';
+            loader.style.display = 'block';
+            processBtn.disabled = true;
+            processBtn.textContent = "Processing...";
+
+            try {
+                // Fetch data
+                const res = await fetch(`${API_URL}?url=${encodeURIComponent(url)}&hd=1`);
+                const json = await res.json();
+
+                if (json.code === 0) {
+                    renderResult(json.data);
+                } else {
+                    showError("Video not found. Is the account private?");
+                }
+
+            } catch (err) {
+                showError("Connection failed. Check your internet.");
+            } finally {
+                loader.style.display = 'none';
+                processBtn.disabled = false;
+                processBtn.textContent = "Analyze";
+            }
+        }
+
+        function renderResult(data) {
+            const { cover, play, music, title, author, digg_count } = data;
+            
+            // Format number
+            const likes = new Intl.NumberFormat('en-US', { notation: "compact" }).format(digg_count);
+
+            resultArea.innerHTML = `
+                <div class="card">
+                    <div class="card-body">
+                        <div class="thumb-container">
+                            <img src="${cover}" alt="Video Cover">
+                        </div>
+                        <div class="info">
+                            <div class="author">
+                                <img src="${author.avatar}" alt="Avatar">
+                                <div>
+                                    <strong>${author.nickname}</strong>
+                                    <div style="font-size:0.8rem; color:#64748b">@${author.unique_id}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="desc">${title || 'No caption'}</div>
+                            
+                            <div class="stats-row">
+                                <span>♥ ${likes} Likes</span>
+                                <span>HD Quality</span>
+                            </div>
+
+                            <div class="btn-group">
+                                <button class="btn-dl btn-primary" onclick="forceDownload('${play}', 'Aivyn_Video_${author.unique_id}.mp4', this)">
+                                    Download Video (No Watermark)
+                                </button>
+                                <button class="btn-dl btn-secondary" onclick="forceDownload('${music}', 'Aivyn_Audio_${author.unique_id}.mp3', this)">
+                                    Download MP3 Audio
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            resultArea.style.display = 'block';
+        }
+
+        function showError(msg) {
+            errorMsg.textContent = msg;
+            errorMsg.style.display = 'block';
+        }
+
+        // Force Download Logic (Blob Method)
+        function forceDownload(url, filename, btn) {
+            const originalText = btn.innerText;
+            btn.innerText = "Downloading...";
+            btn.disabled = true;
+
+            fetch(url)
+                .then(resp => resp.blob())
+                .then(blob => {
+                    const blobUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = blobUrl;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(blobUrl);
+                    
+                    btn.innerText = "Saved!";
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.innerText = originalText;
+                    }, 2000);
+                })
+                .catch(() => {
+                    // Fallback to direct window open if CORS fails
+                    window.location.href = url;
+                    btn.innerText = "Opening...";
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.innerText = originalText;
+                    }, 2000);
+                });
+        }
+    </script>
+</body>
+</html>
